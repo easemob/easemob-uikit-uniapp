@@ -86,10 +86,9 @@ class ChatStore {
   }
 
   /**
-   * 关闭聊天连接
-   * @returns Promise
+   * 退出登录
    */
-  close() {
+  logout() {
     logger.info("[ChatStore] Closing connection");
     this.clearStore();
     return ChatUIKit.getChatConn().close();

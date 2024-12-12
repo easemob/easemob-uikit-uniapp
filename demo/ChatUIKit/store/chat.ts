@@ -86,10 +86,9 @@ class ChatStore {
   }
 
   /**
-   * 关闭聊天连接
-   * @returns Promise
+   * 退出登录
    */
-  close() {
+  logout() {
     logger.info("[ChatStore] Closing connection");
     this.clearStore();
     return ChatUIKit.getChatConn().close();
@@ -97,7 +96,10 @@ class ChatStore {
 
   /** 节流处理用户信息获取 */
   _throttle = throttle(() => {
-    logger.info("[ChatStore] Throttled user info fetch for users:", GroupEventFromIds);
+    logger.info(
+      "[ChatStore] Throttled user info fetch for users:",
+      GroupEventFromIds
+    );
     ChatUIKit.contactStore.deepGetUserInfo([...GroupEventFromIds]);
     GroupEventFromIds.length = 0;
   }, 1000);
@@ -272,7 +274,12 @@ class ChatStore {
     // 群组事件处理
     ChatUIKit.getChatConn().addEventHandler("STORE_GROUP", {
       onGroupEvent: async (event) => {
-        logger.info("[ChatStore] Group event:", event.operation, "for group:", event.id);
+        logger.info(
+          "[ChatStore] Group event:",
+          event.operation,
+          "for group:",
+          event.id
+        );
         // 群组事件暂时不处理
         // this.handleGroupEvent(event);
       }
@@ -281,7 +288,10 @@ class ChatStore {
     // 在线状态事件处理
     ChatUIKit.getChatConn().addEventHandler("STORE_Presence", {
       onPresenceStatusChange: (msg) => {
-        logger.info("[ChatStore] Presence status changed for users:", msg.map(p => p.userId));
+        logger.info(
+          "[ChatStore] Presence status changed for users:",
+          msg.map((p) => p.userId)
+        );
         msg.forEach((presenceInfo) => {
           let ext = presenceInfo.ext;
           const detailList = presenceInfo.statusDetails;
@@ -365,7 +375,12 @@ class ChatStore {
    * @param event 群组事件
    */
   async handleGroupEvent(event) {
-    logger.info("[ChatStore] Processing group event:", event.operation, "for group:", event.id);
+    logger.info(
+      "[ChatStore] Processing group event:",
+      event.operation,
+      "for group:",
+      event.id
+    );
     GroupEventFromIds.push(event.from);
 
     if (["directJoined", "create", "acceptRequest"].includes(event.operation)) {

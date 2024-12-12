@@ -75,7 +75,7 @@ const copy = () => {
 };
 
 const logout = () => {
-  ChatUIKit.chatStore.close();
+  ChatUIKit.chatStore.logout();
   uni.removeStorageSync(CHAT_STORE);
   uni.reLaunch({
     url: "/pages/Login/index"
