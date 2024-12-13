@@ -4,8 +4,10 @@ const SERVER_CONFIG_STORE = "serverConfig";
 const serverConfig = uni.getStorageSync(SERVER_CONFIG_STORE) || {};
 const IS_USE_CUSTOM_SERVER = serverConfig.isUseCustomServer || false; // 是否使用自定义服务器
 const APPKEY = serverConfig.appkey || "your#appkey"; // 环信appkey
-const API_URL = serverConfig.restUrl || ""; // 环信api地址
-const URL = serverConfig.url || ""; // 环信websocket地址
+// 例如: https://a1.easemob.com
+const API_URL = serverConfig.restUrl || ""; // 环信api地址 
+// 例如: wss://im-api-wechat.easemob.com/websocket 
+const URL = serverConfig.url || ""; // 环信websocket地址 
 
 // Demo内部上传头像地址 (仅支持官方appkey使用)
 const getInsideUploadUrl = (userId: string) => {
