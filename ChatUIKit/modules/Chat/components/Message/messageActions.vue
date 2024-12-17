@@ -13,7 +13,7 @@
         class="operate-item"
         v-for="(menuItem, idx) in menuItems"
         :key="idx"
-        @click.stop="menuItem.action(item, index)"
+        @click.stop="menuItem.action"
       >
         <image
           :src="menuItem.icon"
