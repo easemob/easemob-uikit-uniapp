@@ -9,6 +9,8 @@
     <ChatNav />
     <!-- 消息列表 -->
     <view class="msgs-wrap">
+      <!-- 风险提示 -->
+      <RiskTip />
       <!-- 遮照层,点击关闭Toolbar -->
       <view v-if="isShowMask" class="mask" @tap="closeToolbar"></view>
       <MessageList
@@ -81,6 +83,7 @@ import MessageQuotePanel from "./components/Message/messageQuotePanel.vue";
 import MessageEdit from "./components/Message/messageEdit.vue";
 import MessageMentionList from "./components/MessageMentionList/index.vue";
 import MessageContactList from "./components/MessageContactList/index.vue";
+import RiskTip from "@/components/RiskTip/index.vue";
 import { t } from "../../locales/index";
 import { ref, onMounted, computed, onUnmounted, provide } from "vue";
 import { onLoad, onUnload } from "@dcloudio/uni-app";
