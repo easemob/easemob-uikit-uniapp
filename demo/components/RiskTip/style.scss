@@ -7,6 +7,11 @@
   flex-shrink: 0;
 }
 
+.left-wrap {
+  display: flex;
+  align-items: flex-start;
+}
+
 .close-btn {
   width: 16px;
   height: 16px;
@@ -14,14 +19,17 @@
   background-size: 100% 100%;
   background-repeat: no-repeat;
   flex-shrink: 0;
+  cursor: pointer;
 }
 
 .tip-wrap {
+  width: calc(100% - 20px);
+  box-sizing: border-box;
   position: absolute;
   z-index: 999;
   display: inline-flex;
   padding: 12px;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: flex-start;
   border-radius: 8px;
   margin: 10px;
@@ -29,10 +37,16 @@
   box-shadow: 1px 0px 2px 0px rgba(26, 26, 26, 0.10), 0px 1px 3px 0px rgba(77, 77, 77, 0.15);
   color: #464E53;
   font-size: 12px;
-  font-weight: 500;
   line-height: 16px;
+}
+
+.report-btn {
+  color: #009DFF;
+  cursor: pointer;
+  font-weight: 500;
 }
 
 .tip-text {
   margin: 0 8px;
+  font-weight: 400;
 }
