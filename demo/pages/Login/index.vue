@@ -33,6 +33,20 @@
           :placeholder="t('loginPhoneIdPlaceholder')"
         />
       </view>
+	  <div id="captcha-element"></div>
+	   <view class="input-wrap" style="padding-right: 0;">
+		<input
+		  class="input"
+		  v-model="imgCode"
+		  type="text"
+		  maxlength="4"
+		  :placeholder="t('inputImgCode')"
+		/>
+		<view class="get-code" @tap="getImageCode">
+			<img :src="imageUrl" alt="">
+		</view>
+		</view>
+		
       <view class="input-wrap">
         <input
           class="input"
@@ -41,9 +55,11 @@
           maxlength="6"
           :placeholder="t('loginCodePlaceholder')"
         />
-        <text size="mini" type="primary" class="get-code" @tap="getCode">
+		<div @tap="verifyPhoneNum">
+        <text size="mini" type="primary" @tap="getCode" class="get-code" id="captcha-button" :style="isPhoneNumberValid() && counter === 60 ? 'pointer-events: auto' : 'pointer-events:none'">
           {{ counter === 60 ? t("getCode") : counter }}
         </text>
+		</div>
       </view>
     </view>
     <button class="login-btn" type="primary" @tap="loginIM">
@@ -78,9 +94,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onUnmounted } from "vue";
+import { ref, onUnmounted, onMounted, onBeforeUnmount } from "vue";
 import { t } from "../../const/locales";
 import { CHAT_STORE, IS_USE_CUSTOM_SERVER } from "@/const/index";
+import {encryptAES} from './crypto'
 
 // 基础数据
 let disabled = false;
@@ -93,10 +110,20 @@ const code = ref("");
 const privacyChecked = ref(false);
 const times = ref(0);
 
+const imageUrl = ref("")
+const imgCode = ref("")
+const imageId = ref("")
+// 阿里云验证码
+let captcha = null;
+let captchaButton = null;
+
+const secret = "";
+const sceneId = '';
+const prefix = ''; 
 // const isPasswordLogin = ref(!!IS_USE_CUSTOM_SERVER);
 
 // 是否使用密码登录
-const isPasswordLogin = ref(true);
+const isPasswordLogin = ref(false);
 
 // 启动倒计时
 const startCount = () => {
@@ -116,8 +143,21 @@ const startCount = () => {
   }, 1000);
 };
 
+const verifyPhoneNum = () => {
+	if (!isPhoneNumberValid()) {
+	      uni.showToast({
+	        title: t("telNumberError"),
+	        icon: "none"
+	      });
+	}
+}
+
+const isPhoneNumberValid = () => {
+    return /^1[3456789]\d{9}$/.test(tel.value);
+};
+
 // 获取验证码
-const getCode = async () => {
+const getCode = async (captchaVerifyParam: string) => {
   if (disabled) {
     return;
   }
@@ -128,27 +168,79 @@ const getCode = async () => {
     });
     return;
   }
+  if(imgCode.value.length != 4){
+	  uni.showToast({
+	    title: t("imgCodeError"),
+	    icon: "none"
+	  });
+	  return
+  }
 
   try {
-    startCount();
-    const res: any = await uni.request({
-      url: `https://a1.easemob.com/inside/app/sms/send/${tel.value}`,
-      header: { "content-type": "application/json" },
-      method: "POST",
-      data: { phoneNumber: tel.value }
-    });
+    uni.request({
+		url: 'https://a1.easemob.com/inside/app/sms/send/v3',
+		header: {
+			'content-type': 'application/json'
+		},
+		method: 'POST',
+		data: {
+			phoneNumber: tel.value,
+			imageId: imageId.value,
+			imageCode: imgCode.value
+		},
+		success (res: any) {
+			if(res.statusCode == 200){
+				startCount();
+				uni.showToast({ title: t("getCodeSuccess"), icon: "none" });
+			}else if(res.statusCode == 400){
+				if(res.data.errorInfo == 'phone number illegal'){
+					// self.toastFilled('请输入正确的手机号！')
+					handleGetCodeError(res.data.errorInfo);
+				}else if(res.data.errorInfo == 'Please wait a moment while trying to send.'){
+					// self.toastFilled('你的操作过于频繁，请稍后再试！')
+					handleGetCodeError(res.data.errorInfo);
+				}else if(res.data.errorInfo == 'Image verification code error.'){
+					// self.toastFilled('图片验证码错误！')
+					handleGetCodeError(res.data.errorInfo);
+					getImageCode()
+				}else{
+					// self.toastFilled(res.data.errorInfo)
+					handleGetCodeError(res.data.errorInfo);
+				}
+			}else if(res.statusCode == 429){
+				handleGetCodeError(res.data.error_description);
+			}
+		},
+		fail(error){
+			uni.showToast({ title: t("getCodeFailed"), icon: "none" });
+		}
+	})
+			
+ //    const res: any = await uni.request({
+ //      url: `https://a1-appserver.easemob.com/inside/app/sms/send/v2`,
+ //      header: { "content-type": "application/json" },
+ //      method: "POST",
+ //      data: { phoneNumber: tel.value,  captchaVerifyParam}
+ //    });
 
-    if (res.statusCode === 200) {
-      uni.showToast({ title: t("getCodeSuccess"), icon: "none" });
-    } else if (res.statusCode === 400) {
-      handleGetCodeError(res.data.errorInfo);
-    } else {
-      uni.showToast({ title: t("getCodeFailed"), icon: "none" });
-    }
-  } catch (error) {
-    console.error(error);
-    uni.showToast({ title: t("getCodeFailed"), icon: "none" });
-  }
+ //    if (res.statusCode === 200) {
+	//   startCount();
+ //      uni.showToast({ title: t("getCodeSuccess"), icon: "none" });
+	//   return true;
+ //    } else if (res.statusCode === 400) {
+ //      handleGetCodeError(res.data.errorInfo);
+	//   return false
+ //    } else {
+ //      uni.showToast({ title: t("getCodeFailed"), icon: "none" });
+ //    }
+ //  } catch (error) {
+ //    console.error(error);
+ //    uni.showToast({ title: t("getCodeFailed"), icon: "none" });
+	// return false
+ //  }
+ } catch(error){
+	 uni.showToast({ title: t("getCodeFailed"), icon: "none" });
+ }
 };
 
 // 处理验证码获取错误信息
@@ -156,7 +248,8 @@ const handleGetCodeError = (errorInfo: string) => {
   const messages: Record<string, string> = {
     "phone number illegal": t("telNumberError"),
     "Please wait a moment while trying to send.": t("getCodeFrequent"),
-    "exceed the limit": t("getCodeReachLimit")
+    "exceed the limit": t("getCodeReachLimit"),
+	"This request has reached api limit.": t('getCodeReachLimit')
   };
   const message = messages[errorInfo] || errorInfo;
   uni.showToast({ title: message, icon: "none" });
@@ -214,7 +307,6 @@ const loginWithTel = async () => {
         smsCode: code.value
       }
     });
-
     if (res.statusCode == 200) {
       const { token, chatUserName } = res.data;
       uni.$UIKit.chatStore
@@ -317,13 +409,89 @@ const checkboxChange = (e: any) => {
 const toServerConfig = () => {
   uni.navigateTo({ url: "../ServerConfig/index" });
 };
+const captchaVerifyCallback = async(captchaVerifyParam: string) => {
+	const data = { captchaResult: false, bizResult: true };
+	if (!captchaVerifyParam) {
+		uni.showToast({
+		  title: t("completeTheVerification"),
+		  icon: "none"
+		});
+	  // toast.error(i18next.t("Please complete the verification"));
+	  // handleSendCode(false);
+	  return data;
+	}
+	captchaVerifyParam = await encryptAES(captchaVerifyParam , secret);
+	const result = await getCode(captchaVerifyParam);
+	data.captchaResult = result;
 
+    return data
+}
+
+// 验证通过后调用
+const onBizResultCallback = () => {
+      console.log('onBizResultCallback');
+}
+
+const getInstance = (instance) => {
+    captcha = instance;
+}
 // 清除定时器
 onUnmounted(() => {
   if (timer.value) {
     clearInterval(timer.value);
   }
 });
+
+// app 中使用图片验证码
+const getImageCode = () => {
+	uni.request({
+		url: 'https://a1-appserver.easemob.com/inside/app/image',
+		header: {
+			'content-type': 'application/json'
+	    },
+		success (res) {
+			if(res.statusCode != 200){
+				return this.toastFilled('获取图片验证码失败，请重试！')
+			}
+			const url = 'https://a1-appserver.easemob.com/inside/app/image/' + res.data.data.image_id
+			imageUrl.value = url
+			imageId.value = res.data.data.image_id
+		},
+	    fail(){
+			console.log('获取验证码失败')
+	    }
+	})
+}
+
+onMounted(() => {
+	// captchaButton = document.getElementById('captcha-button');
+	// @ts-ignore
+	if(typeof window != 'undefined'){
+		// window.initAliyunCaptcha({
+		//   SceneId: sceneId, // 场景ID。根据步骤二新建验证场景后，您可以在验证码场景列表，获取该场景的场景ID
+		//   prefix: prefix, // 身份标。开通阿里云验证码2.0后，您可以在控制台概览页面的实例基本信息卡片区域，获取身份标
+		//   mode: 'popup', // 验证码模式。popup表示要集成的验证码模式为弹出式。无需修改
+		//   element: '#captcha-element', // 页面上预留的渲染验证码的元素，与原代码中预留的页面元素保持一致。
+		//   button: '#captcha-button2', // 触发验证码弹窗的元素。button表示单击登录按钮后，触发captchaVerifyCallback函数。您可以根据实际使用的元素修改element的值
+		//   captchaVerifyCallback: captchaVerifyCallback, // 业务请求(带验证码校验)回调函数，无需修改
+		//   onBizResultCallback: onBizResultCallback, // 业务请求结果回调函数，无需修改
+		//   getInstance: getInstance, // 绑定验证码实例函数，无需修改
+		//   slideStyle: {
+		// 	width: 360,
+		// 	height: 40,
+		//   }, // 滑块验证码样式，支持自定义宽度和高度，单位为px。其中，width最小值为320 px
+		//   language: 'cn', // 验证码语言类型，支持简体中文（cn）、繁体中文（tw）、英文（en）
+		// });
+	}
+	getImageCode();
+})
+
+onBeforeUnmount(() => {
+	captchaButton = null;
+	// 必须删除相关元素，否则再次mount多次调用 initAliyunCaptcha 会导致多次回调 captchaVerifyCallback
+	document.getElementById('aliyunCaptcha-mask')?.remove();
+	document.getElementById('aliyunCaptcha-window-popup')?.remove();
+})
 </script>
 
 <style lang="scss" scoped>

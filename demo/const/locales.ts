@@ -17,6 +17,8 @@ const locales = {
     codeError: "验证码错误",
     codeIsEmpty: "验证码不能为空",
     getCodeFirst: "请先发送验证码",
+	imgCodeError: "请输入正确的图片验证码",
+	inputImgCode: "请输入图片验证码",
     privacyChecked: "请先同意隐私协议",
     agreeTo: "同意",
     privacyPolicy: "隐私协议",
@@ -62,7 +64,8 @@ const locales = {
     presenceCustom: "自定义在线状态",
     presenceConfirm: "确认",
     presencePlaceholder: "请输入自定义状态",
-    unSupportTip: "暂不支持"
+    unSupportTip: "暂不支持",
+	completeTheVerification: "请完成验证"
   },
   en: {
     loginTitle: "EaseMob IM",
@@ -82,6 +85,8 @@ const locales = {
     codeError: "Incorrect verification code",
     codeIsEmpty: "Verification code cannot be empty",
     getCodeFirst: "Please send the verification code first",
+	imgCodeError: "Please enter the correct image verification code",
+	inputImgCode: "Please enter the image verification code",
     privacyChecked: "Please agree to the privacy policy first",
     agreeTo: "Agree to",
     privacyPolicy: "Privacy Policy",
@@ -127,7 +132,8 @@ const locales = {
     presenceCustom: "Custom Status",
     presenceConfirm: "Confirm",
     presencePlaceholder: "Enter custom status",
-    unSupportTip: "Not supported"
+    unSupportTip: "Not supported",
+	completeTheVerification: "Please complete the verification"
   }
 };
 
