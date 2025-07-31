@@ -34,7 +34,7 @@
         />
       </view>
 	  <div id="captcha-element"></div>
-	   <view class="input-wrap" style="padding-right: 0;">
+	  <!-- <view class="input-wrap" style="padding-right: 0;">
 		<input
 		  class="input"
 		  v-model="imgCode"
@@ -45,7 +45,7 @@
 		<view class="get-code" @tap="getImageCode">
 			<img :src="imageUrl" alt="">
 		</view>
-		</view>
+		</view> -->
 		
       <view class="input-wrap">
         <input
@@ -123,7 +123,7 @@ const prefix = '';
 // const isPasswordLogin = ref(!!IS_USE_CUSTOM_SERVER);
 
 // 是否使用密码登录
-const isPasswordLogin = ref(false);
+// const isPasswordLogin = ref(false);
 
 // 启动倒计时
 const startCount = () => {
@@ -168,71 +168,71 @@ const getCode = async (captchaVerifyParam: string) => {
     });
     return;
   }
-  if(imgCode.value.length != 4){
-	  uni.showToast({
-	    title: t("imgCodeError"),
-	    icon: "none"
-	  });
-	  return
-  }
+  // if(imgCode.value.length != 4){
+	 //  uni.showToast({
+	 //    title: t("imgCodeError"),
+	 //    icon: "none"
+	 //  });
+	 //  return
+  // }
 
   try {
-    uni.request({
-		url: 'https://a1.easemob.com/inside/app/sms/send/v3',
-		header: {
-			'content-type': 'application/json'
-		},
-		method: 'POST',
-		data: {
-			phoneNumber: tel.value,
-			imageId: imageId.value,
-			imageCode: imgCode.value
-		},
-		success (res: any) {
-			if(res.statusCode == 200){
-				startCount();
-				uni.showToast({ title: t("getCodeSuccess"), icon: "none" });
-			}else if(res.statusCode == 400){
-				if(res.data.errorInfo == 'phone number illegal'){
-					// self.toastFilled('请输入正确的手机号！')
-					handleGetCodeError(res.data.errorInfo);
-				}else if(res.data.errorInfo == 'Please wait a moment while trying to send.'){
-					// self.toastFilled('你的操作过于频繁，请稍后再试！')
-					handleGetCodeError(res.data.errorInfo);
-				}else if(res.data.errorInfo == 'Image verification code error.'){
-					// self.toastFilled('图片验证码错误！')
-					handleGetCodeError(res.data.errorInfo);
-					getImageCode()
-				}else{
-					// self.toastFilled(res.data.errorInfo)
-					handleGetCodeError(res.data.errorInfo);
-				}
-			}else if(res.statusCode == 429){
-				handleGetCodeError(res.data.error_description);
-			}
-		},
-		fail(error){
-			uni.showToast({ title: t("getCodeFailed"), icon: "none" });
-		}
-	})
+ //    uni.request({
+	// 	url: 'https://a1.easemob.com/inside/app/sms/send/v3',
+	// 	header: {
+	// 		'content-type': 'application/json'
+	// 	},
+	// 	method: 'POST',
+	// 	data: {
+	// 		phoneNumber: tel.value,
+	// 		imageId: imageId.value,
+	// 		imageCode: imgCode.value
+	// 	},
+	// 	success (res: any) {
+	// 		if(res.statusCode == 200){
+	// 			startCount();
+	// 			uni.showToast({ title: t("getCodeSuccess"), icon: "none" });
+	// 		}else if(res.statusCode == 400){
+	// 			if(res.data.errorInfo == 'phone number illegal'){
+	// 				// self.toastFilled('请输入正确的手机号！')
+	// 				handleGetCodeError(res.data.errorInfo);
+	// 			}else if(res.data.errorInfo == 'Please wait a moment while trying to send.'){
+	// 				// self.toastFilled('你的操作过于频繁，请稍后再试！')
+	// 				handleGetCodeError(res.data.errorInfo);
+	// 			}else if(res.data.errorInfo == 'Image verification code error.'){
+	// 				// self.toastFilled('图片验证码错误！')
+	// 				handleGetCodeError(res.data.errorInfo);
+	// 				getImageCode()
+	// 			}else{
+	// 				// self.toastFilled(res.data.errorInfo)
+	// 				handleGetCodeError(res.data.errorInfo);
+	// 			}
+	// 		}else if(res.statusCode == 429){
+	// 			handleGetCodeError(res.data.error_description);
+	// 		}
+	// 	},
+	// 	fail(error){
+	// 		uni.showToast({ title: t("getCodeFailed"), icon: "none" });
+	// 	}
+	// })
 			
- //    const res: any = await uni.request({
- //      url: `https://a1-appserver.easemob.com/inside/app/sms/send/v2`,
- //      header: { "content-type": "application/json" },
- //      method: "POST",
- //      data: { phoneNumber: tel.value,  captchaVerifyParam}
- //    });
+    const res: any = await uni.request({
+      url: `https://appserver.easesdk.com/inside/app/sms/send/v2`,
+      header: { "content-type": "application/json" },
+      method: "POST",
+      data: { phoneNumber: tel.value,  captchaVerifyParam}
+    });
 
- //    if (res.statusCode === 200) {
-	//   startCount();
- //      uni.showToast({ title: t("getCodeSuccess"), icon: "none" });
-	//   return true;
- //    } else if (res.statusCode === 400) {
- //      handleGetCodeError(res.data.errorInfo);
-	//   return false
- //    } else {
- //      uni.showToast({ title: t("getCodeFailed"), icon: "none" });
- //    }
+    if (res.statusCode === 200) {
+	  startCount();
+      uni.showToast({ title: t("getCodeSuccess"), icon: "none" });
+	  return true;
+    } else if (res.statusCode === 400) {
+      handleGetCodeError(res.data.errorInfo);
+	  return false
+    } else {
+      uni.showToast({ title: t("getCodeFailed"), icon: "none" });
+    }
  //  } catch (error) {
  //    console.error(error);
  //    uni.showToast({ title: t("getCodeFailed"), icon: "none" });
@@ -464,26 +464,24 @@ const getImageCode = () => {
 }
 
 onMounted(() => {
-	// captchaButton = document.getElementById('captcha-button');
+	captchaButton = document.getElementById('captcha-button');
 	// @ts-ignore
-	if(typeof window != 'undefined'){
-		// window.initAliyunCaptcha({
-		//   SceneId: sceneId, // 场景ID。根据步骤二新建验证场景后，您可以在验证码场景列表，获取该场景的场景ID
-		//   prefix: prefix, // 身份标。开通阿里云验证码2.0后，您可以在控制台概览页面的实例基本信息卡片区域，获取身份标
-		//   mode: 'popup', // 验证码模式。popup表示要集成的验证码模式为弹出式。无需修改
-		//   element: '#captcha-element', // 页面上预留的渲染验证码的元素，与原代码中预留的页面元素保持一致。
-		//   button: '#captcha-button2', // 触发验证码弹窗的元素。button表示单击登录按钮后，触发captchaVerifyCallback函数。您可以根据实际使用的元素修改element的值
-		//   captchaVerifyCallback: captchaVerifyCallback, // 业务请求(带验证码校验)回调函数，无需修改
-		//   onBizResultCallback: onBizResultCallback, // 业务请求结果回调函数，无需修改
-		//   getInstance: getInstance, // 绑定验证码实例函数，无需修改
-		//   slideStyle: {
-		// 	width: 360,
-		// 	height: 40,
-		//   }, // 滑块验证码样式，支持自定义宽度和高度，单位为px。其中，width最小值为320 px
-		//   language: 'cn', // 验证码语言类型，支持简体中文（cn）、繁体中文（tw）、英文（en）
-		// });
-	}
-	getImageCode();
+		window.initAliyunCaptcha({
+		  SceneId: sceneId, // 场景ID。根据步骤二新建验证场景后，您可以在验证码场景列表，获取该场景的场景ID
+		  prefix: prefix, // 身份标。开通阿里云验证码2.0后，您可以在控制台概览页面的实例基本信息卡片区域，获取身份标
+		  mode: 'popup', // 验证码模式。popup表示要集成的验证码模式为弹出式。无需修改
+		  element: '#captcha-element', // 页面上预留的渲染验证码的元素，与原代码中预留的页面元素保持一致。
+		  button: '#captcha-button', // 触发验证码弹窗的元素。button表示单击登录按钮后，触发captchaVerifyCallback函数。您可以根据实际使用的元素修改element的值
+		  captchaVerifyCallback: captchaVerifyCallback, // 业务请求(带验证码校验)回调函数，无需修改
+		  onBizResultCallback: onBizResultCallback, // 业务请求结果回调函数，无需修改
+		  getInstance: getInstance, // 绑定验证码实例函数，无需修改
+		  slideStyle: {
+			width: 360,
+			height: 40,
+		  }, // 滑块验证码样式，支持自定义宽度和高度，单位为px。其中，width最小值为320 px
+		  language: 'cn', // 验证码语言类型，支持简体中文（cn）、繁体中文（tw）、英文（en）
+		});
+	// getImageCode();
 })
 
 onBeforeUnmount(() => {

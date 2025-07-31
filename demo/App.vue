@@ -13,7 +13,7 @@ import { autorun, runInAction } from "mobx";
 
 const chat = new (websdk as unknown as EasemobChatStatic).connection({
   appKey: APPKEY,
-  isHttpDNS: false,
+  isHttpDNS: true,
   url: URL,
   apiUrl: API_URL,
   delivery: true
