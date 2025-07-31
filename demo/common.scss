@@ -19,6 +19,28 @@ body {
   /* 使用省略号替代超出部分 */
 }
 
+.message-scroll-list {
+  background-image: url("/static/chatbg.png");
+  background-size: 231px 172px;
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+
+.scroll-msg-item::after {
+  display: flex;
+  justify-content: center;
+  content: "演示功能，无真实数据，仅限体验";
+  color: #acb4b9;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 16px;
+  /* 142.857% */
+  text-align: center;
+  margin-top: 15px;
+}
+
+
 page {
   height: 100%;
   background: #f9fafa;
