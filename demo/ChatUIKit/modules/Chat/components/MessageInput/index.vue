@@ -43,12 +43,17 @@
 <script setup lang="ts">
 import { ref, nextTick } from "vue";
 import AudioMessageSender from "../MessageInputToolBar/audioSender.vue";
-import { formatTextMessage, formatMessage } from "../../../../utils/index";
+import {
+  formatTextMessage,
+  formatMessage,
+  isAndroid
+} from "../../../../utils/index";
 import { ChatUIKit } from "../../../../index";
 import { t } from "../../../../locales/index";
 import { AT_ALL } from "../../../../const/index";
 import { MessageQuoteExt } from "../../../../types/index";
 import { chatSDK } from "../../../../sdk";
+import permission from "../../../../utils/permission";
 
 interface Props {
   preventEvent: boolean; // 输入框是否禁止事件
@@ -81,7 +86,21 @@ const text = ref("");
 
 const mentionUserIds = ref<string[]>([]);
 
-const showAudioPopup = () => {
+const showAudioPopup = async () => {
+  //#ifdef APP-PLUS
+  if (isAndroid) {
+    const result = await permission.requestAndroidPermission(
+      "android.permission.RECORD_AUDIO"
+    );
+    if (result !== 1) {
+      uni.showToast({
+        title: t("getMicrophonePermissionFailed"),
+        icon: "none"
+      });
+      return;
+    }
+  }
+  // #endif
   audioPopupRef.value.showAudioPopup();
   emits("onRecordAudio");
 };

@@ -27,6 +27,7 @@ export default {
   saturday: "Saturday",
   loadMore: "Load More",
   sendMessagePlaceholder: "Enter message...",
+  getMicrophonePermissionFailed: "Microphone permission not enabled",
   imageUpload: "Image",
   videoUpload: "Video",
   about: "About",

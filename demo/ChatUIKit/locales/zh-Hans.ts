@@ -27,6 +27,7 @@ export default {
   saturday: "星期六",
   loadMore: "加载更多",
   sendMessagePlaceholder: "请输入消息...",
+  getMicrophonePermissionFailed: "未开启麦克风权限",
   imageUpload: "图片",
   videoUpload: "视频",
   about: "关于",
