@@ -44,6 +44,8 @@ import { t } from "../../../../locales/index";
 import { ChatUIKit } from "../../../../index";
 import { chatSDK } from "../../../../sdk";
 import { logger } from "../../../../log";
+import permission from "../../../../utils/permission.js";
+import { isIOS } from "../../../../utils/index";
 
 type RecordStatus = "record" | "recording" | "recordEnd";
 
@@ -210,7 +212,24 @@ onMounted(() => {
   recorder.value?.onStart(() => {
     logger.log("recording start");
   });
-  recorder.value?.onError(() => {
+  recorder.value?.onError(async () => {
+    // #ifdef APP-PLUS
+    if (isIOS) {
+      const result = await permission.judgeIosPermission("record");
+      console.log(result, "result");
+      if (!result) {
+        stopRecording();
+        resetRecording();
+        hideAudioPopup();
+        setTimeout(() => {
+          uni.showToast({
+            title: t("getMicrophonePermissionFailed"),
+            icon: "none"
+          });
+        }, 200);
+      }
+    }
+    // #endif
     logger.log("recording error");
   });
   recorder.value?.onStop((res) => {

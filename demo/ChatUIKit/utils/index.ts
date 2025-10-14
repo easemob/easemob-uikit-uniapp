@@ -96,6 +96,12 @@ export const isWXProgram = uni.getSystemInfoSync().uniPlatform == "mp-weixin";
 // 是否web环境
 export const isWeb = uni.getSystemInfoSync().uniPlatform === "web";
 
+// 是否运行在IOS平台
+export const isIOS = uni.getSystemInfoSync().platform === "ios";
+
+// 是否运行在Android平台
+export const isAndroid = uni.getSystemInfoSync().platform === "android";
+
 type CallbackFunction = (...args: any[]) => void;
 
 export function throttle(
