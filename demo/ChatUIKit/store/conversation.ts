@@ -66,17 +66,73 @@ class ConversationStore {
   setConversations(conversations: Chat.ConversationItem[]) {
     logger.info("[ConversationStore] Setting conversations:", conversations);
     if (!Array.isArray(conversations)) {
-      return logger.error("[ConversationStore] Invalid parameter: conversations");
+      return logger.error(
+        "[ConversationStore] Invalid parameter: conversations"
+      );
     }
 
     const currentCvsId = this.conversationList.map(
       (item) => item.conversationId
     );
-    const filteredConversations = conversations.filter(
-      ({ conversationId }) => !currentCvsId.includes(conversationId)
-    );
-    const beforeConversations = [...this.conversationList];
-    const userIds = filteredConversations
+
+    // 分离已存在和新会话
+    const existingConversations: Chat.ConversationItem[] = [];
+    const newConversations: Chat.ConversationItem[] = [];
+
+    conversations.forEach((conv) => {
+      if (currentCvsId.includes(conv.conversationId)) {
+        existingConversations.push(conv);
+      } else {
+        newConversations.push(conv);
+      }
+    });
+
+    // 更新已存在会话的属性（合并服务器返回的属性）
+    existingConversations.forEach((serverConv) => {
+      const localConv = this.conversationList.find(
+        (item) => item.conversationId === serverConv.conversationId
+      );
+      if (localConv) {
+        runInAction(() => {
+          // 保留本地可能更新的属性（如 lastMessage, unReadCount, atType）
+          // 更新服务器端的属性（如 isPinned, pinnedTime 等）
+
+          // 比较 lastMessage 的时间，保留时间更晚的消息
+          let finalLastMessage =
+            localConv.lastMessage || serverConv.lastMessage;
+          if (localConv.lastMessage && serverConv.lastMessage) {
+            const localTime =
+              "time" in localConv.lastMessage
+                ? (localConv.lastMessage as any).time
+                : 0;
+            const serverTime =
+              "time" in serverConv.lastMessage
+                ? (serverConv.lastMessage as any).time
+                : 0;
+            if (localTime > serverTime) {
+              finalLastMessage = localConv.lastMessage;
+            } else {
+              finalLastMessage = serverConv.lastMessage;
+            }
+          }
+
+          Object.assign(localConv, {
+            ...serverConv,
+            lastMessage: finalLastMessage,
+            // 保留本地的未读数（可能已更新）
+            unReadCount: localConv.unReadCount,
+            // 保留本地的 @ 类型
+            atType: localConv.atType
+          });
+        });
+        logger.log(
+          "[ConversationStore] Updated existing conversation:",
+          localConv.conversationId
+        );
+      }
+    });
+
+    const userIds = conversations
       .filter(
         (conversationItem) => conversationItem.conversationType === "singleChat"
       )
@@ -84,12 +140,16 @@ class ConversationStore {
 
     logger.log("[ConversationStore] Getting user info for:", userIds);
     this.deepGetUserInfo(userIds);
-    this.getSilentModeForConversations(filteredConversations);
+    this.getSilentModeForConversations(conversations);
 
-    beforeConversations.push(...filteredConversations);
-
-    this.conversationList = [...beforeConversations.sort(sortByPinned)];
-    logger.info("[ConversationStore] Updated conversation list:", this.conversationList);
+    // 合并列表并排序
+    const updatedConversations = [...this.conversationList];
+    updatedConversations.push(...newConversations);
+    this.conversationList = [...updatedConversations.sort(sortByPinned)];
+    logger.info(
+      "[ConversationStore] Updated conversation list:",
+      this.conversationList
+    );
   }
 
   /**
@@ -189,7 +249,7 @@ class ConversationStore {
    * @param message 会话最后一条消息
    */
   getConversationTime(message: Chat.ConversationItem["lastMessage"]) {
-    if (!message || !message.time) {
+    if (!message || !("time" in message)) {
       return "";
     }
     return getTimeStringAutoShort(message.time, true);
