@@ -1,3 +1,4 @@
+import { reactive } from 'vue'
 import { makeAutoObservable } from "mobx";
 import type { Chat, PresenceInfo, UserInfoWithPresence } from "../types/index";
 import { ChatUIKit } from "../index";
@@ -8,7 +9,7 @@ import { logger } from "../log";
  */
 class AppUserStore {
   /** 存储用户信息的映射表，key为用户ID，value为用户信息 */
-  appUserInfo: Map<string, Chat.UpdateOwnUserInfoParams> = new Map();
+  appUserInfo: reactive<Map<string, Chat.UpdateOwnUserInfoParams>> = new Map();
   /** 存储用户在线状态的映射表，key为用户ID，value为在线状态信息 */
   appUserPresence: Map<string, PresenceInfo> = new Map();
 
