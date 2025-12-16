@@ -54,9 +54,15 @@ class MessageStore {
   /**
    * 将消息添加到消息映射中
    * @param msg 要添加的消息对象
+   * @returns 是否成功添加（如果已存在则返回false）
    */
   addMessageToMap(msg: MixedMessageBody) {
+    // 基于消息ID的去重检查
+    if (this.messageMap.has(msg.id)) {
+      return false;
+    }
     this.messageMap.set(msg.id, msg);
+    return true;
   }
 
   /**
@@ -97,26 +103,45 @@ class MessageStore {
       logger.info("[MessageStore] Get history messages success", dt);
 
       runInAction(() => {
+        // 只收集那些真正添加到messageMap中的消息ID（即新消息）
+        const newMessageIds: string[] = [];
         dt.messages.forEach((msg: any) => {
-          this.addMessageToMap(msg);
+          if (this.addMessageToMap(msg)) {
+            newMessageIds.push(msg.id);
+          }
         });
-        const messageIds = dt.messages.map((msg) => msg.id);
         onSuccess?.();
         const info = this.conversationMessagesMap.get(
           conversation.conversationId
         );
-        if (info && info.isGetHistoryMessage === true) {
-          if (info) {
-            const list = [...info.messageIds];
-            list.unshift(...messageIds.reverse());
-            info.messageIds = list;
-            info.cursor = dt.cursor || "";
-            info.isLast = dt.isLast;
-            info.isGetHistoryMessage = true;
+        // 只有当有新消息时才更新消息列表
+        if (newMessageIds.length > 0) {
+          if (info && info.isGetHistoryMessage === true) {
+            if (info) {
+              const list = [...info.messageIds];
+              list.unshift(...newMessageIds.reverse());
+              info.messageIds = list;
+              info.cursor = dt.cursor || "";
+              info.isLast = dt.isLast;
+              info.isGetHistoryMessage = true;
+            }
+          } else {
+            this.conversationMessagesMap.set(conversation.conversationId, {
+              messageIds: newMessageIds.reverse(),
+              cursor: dt.cursor || "",
+              isLast: dt.isLast,
+              isGetHistoryMessage: true
+            });
           }
+        } else if (info) {
+          // 如果没有新消息，但已有会话信息，更新游标和状态
+          info.cursor = dt.cursor || "";
+          info.isLast = dt.isLast;
+          info.isGetHistoryMessage = true;
         } else {
+          // 如果没有新消息且没有会话信息，创建一个空的会话信息
           this.conversationMessagesMap.set(conversation.conversationId, {
-            messageIds: messageIds.reverse(),
+            messageIds: [],
             cursor: dt.cursor || "",
             isLast: dt.isLast,
             isGetHistoryMessage: true
@@ -148,7 +173,10 @@ class MessageStore {
       if (this.conversationMessagesMap.has(convId)) {
         const info = this.conversationMessagesMap.get(convId);
         if (info) {
-          info.messageIds.push(msg.id);
+          // 检查消息ID是否已存在于会话消息列表中
+          if (!info.messageIds.includes(msg.id)) {
+            info.messageIds.push(msg.id);
+          }
         }
       } else {
         this.conversationMessagesMap.set(convId, {
@@ -343,8 +371,11 @@ class MessageStore {
    */
   onMessage(msg: MixedMessageBody) {
     runInAction(() => {
-      this.addMessageToMap(msg);
-      this.insertMessage(msg);
+      const isNewMsg = this.addMessageToMap(msg);
+      // 如果是新消息才插入到消息列表中
+      if (isNewMsg) {
+        this.insertMessage(msg);
+      }
       ChatUIKit.convStore.setAtTypeByMessage(msg);
       if (msg.chatType !== "chatRoom") {
         const convId = ChatUIKit.convStore.getCvsIdFromMessage(msg);
