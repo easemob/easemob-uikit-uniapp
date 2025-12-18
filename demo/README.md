@@ -35,6 +35,43 @@ git clone https://github.com/easemob/easemob-uikit-uniapp.git
 cd easemob-uikit-uniapp/demo && npm i
 ```
 
+## 页面切换说明
+
+### ChatUIKit 默认页面切换方式
+ChatUIKit 组件库中，页面级别的切换默认使用 `uni.redirectTo` 方法实现。这是因为组件库设计时考虑到大多数场景下，聊天、联系人、群组等功能作为应用的一部分，需要在应用内部进行页面跳转，而不是作为独立的 tab 页面。
+
+### Demo 中的页面切换方式
+在本示例项目中，由于采用了 tabbar 导航结构（将聊天、联系人、群组等作为底部 tab），因此使用了 `uni.switchTab` 方法进行页面切换。这是因为在 uni-app 中，tabBar 页面的切换必须使用 `uni.switchTab` 方法，而不能使用其他页面跳转方法。
+
+### 自定义页面切换
+如果您在集成 ChatUIKit 时需要使用不同的页面切换方式，可以根据您的应用架构选择合适的 uni-app 页面跳转方法：
+- `uni.navigateTo`：保留当前页面，跳转到应用内的某个页面
+- `uni.redirectTo`：关闭当前页面，跳转到应用内的某个页面
+- `uni.switchTab`：跳转到 tabBar 页面，并关闭其他所有非 tabBar 页面
+- `uni.reLaunch`：关闭所有页面，打开到应用内的某个页面
+
+请根据您的实际需求和应用架构选择合适的页面切换方法，并在相应的组件回调中进行自定义实现。
+
+## copy-chat-uikit.js 脚本说明
+
+### 脚本用途
+`copy-chat-uikit.js` 是一个用于将根目录下的 `ChatUIKit` 文件夹复制到 `demo` 目录中的自动化脚本。该脚本的主要功能是：
+- 递归删除 `demo/ChatUIKit` 目录（如果存在）
+- 将根目录下的 `ChatUIKit` 文件夹及其所有内容复制到 `demo` 目录中
+
+### 使用方法
+在 `demo` 目录下执行以下命令：
+```bash
+npm run copy:uikit
+```
+
+### 注意事项
+1. **源码覆盖风险**：运行此脚本后，`demo/ChatUIKit` 目录中的所有现有文件将被根目录下的 `ChatUIKit` 文件完全覆盖。如果您在 `demo/ChatUIKit` 中进行了自定义修改，请务必先备份这些修改。
+
+2. **页面跳转方式**：如前所述，ChatUIKit 组件库默认使用 `uni.redirectTo` 进行页面跳转，但 demo 项目由于使用了 tabbar 结构，部分页面跳转使用了 `uni.switchTab`。在复制源码后，请注意检查并根据您的项目结构调整页面跳转方式。
+
+3. **依赖关系**：确保您的项目已安装所需依赖，特别是 `mobx`，它是 ChatUIKit 的核心依赖之一。
+
 ### 2. 通过 HBuilderX打开demo项目
 
 通过 [HBuilderX](https://dcloud.io/hbuilderx.html) 打开项目中的 demo 文件夹, 即 `${workspace}/easemob-uikit-uniapp/demo`
