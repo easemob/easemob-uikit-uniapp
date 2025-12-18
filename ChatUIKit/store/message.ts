@@ -114,38 +114,55 @@ class MessageStore {
         const info = this.conversationMessagesMap.get(
           conversation.conversationId
         );
-        // 只有当有新消息时才更新消息列表
-        if (newMessageIds.length > 0) {
-          if (info && info.isGetHistoryMessage === true) {
-            if (info) {
-              const list = [...info.messageIds];
-              list.unshift(...newMessageIds.reverse());
-              info.messageIds = list;
-              info.cursor = dt.cursor || "";
-              info.isLast = dt.isLast;
-              info.isGetHistoryMessage = true;
+        
+        // 处理消息顺序：新获取的历史消息应该添加到现有消息列表的前面
+        let updatedMessageIds: string[] = [];
+        
+        if (info && info.isGetHistoryMessage === true) {
+          // 如果已有历史消息，将新消息添加到前面，并去重
+          const existingIds = new Set(info.messageIds);
+          // 新消息按时间顺序添加到前面
+          newMessageIds.reverse().forEach(id => {
+            if (!existingIds.has(id)) {
+              updatedMessageIds.push(id);
             }
+          });
+          // 添加现有消息
+          updatedMessageIds = updatedMessageIds.concat(info.messageIds);
+          
+          // 更新会话信息
+          info.messageIds = updatedMessageIds;
+          info.cursor = dt.cursor || "";
+          info.isLast = dt.isLast;
+          info.isGetHistoryMessage = true;
+        } else {
+          // 如果没有历史消息或未获取过历史消息
+          let allMessageIds = [...newMessageIds].reverse();
+          
+          // 如果有会话信息但未获取过历史消息，合并现有消息
+          if (info) {
+            const existingIds = new Set(allMessageIds);
+            // 添加现有消息中不在新消息中的ID
+            info.messageIds.forEach(id => {
+              if (!existingIds.has(id)) {
+                allMessageIds.push(id);
+              }
+            });
+            
+            // 更新会话信息
+            info.messageIds = allMessageIds;
+            info.cursor = dt.cursor || "";
+            info.isLast = dt.isLast;
+            info.isGetHistoryMessage = true;
           } else {
+            // 创建新的会话信息
             this.conversationMessagesMap.set(conversation.conversationId, {
-              messageIds: newMessageIds.reverse(),
+              messageIds: allMessageIds,
               cursor: dt.cursor || "",
               isLast: dt.isLast,
               isGetHistoryMessage: true
             });
           }
-        } else if (info) {
-          // 如果没有新消息，但已有会话信息，更新游标和状态
-          info.cursor = dt.cursor || "";
-          info.isLast = dt.isLast;
-          info.isGetHistoryMessage = true;
-        } else {
-          // 如果没有新消息且没有会话信息，创建一个空的会话信息
-          this.conversationMessagesMap.set(conversation.conversationId, {
-            messageIds: [],
-            cursor: dt.cursor || "",
-            isLast: dt.isLast,
-            isGetHistoryMessage: true
-          });
         }
       });
     } catch (error) {
